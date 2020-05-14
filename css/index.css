@@ -1976,6 +1976,23 @@ blockquote footer cite:before {
 #aside_content .card-categories ul.card-category-list > .card-category-list-item.more:hover span {
   padding-right: 0.6rem;
 }
+#aside_content .card-categories ul .card-category-list-name {
+  display: inline-block;
+  width: 70%;
+  cursor: pointer;
+}
+#aside_content .card-categories ul .card-category-list-count {
+  display: inline-block;
+  width: 20%;
+}
+#aside_content .card-categories ul .fa {
+  display: inline-block;
+  width: 10%;
+  cursor: pointer;
+}
+#aside_content .card-categories ul ul {
+  display: none;
+}
 #aside_content .card-categories ul .card-post-name {
   overflow: hidden;
   -o-text-overflow: ellipsis;
@@ -2778,7 +2795,7 @@ blockquote footer cite:before {
   -webkit-align-items: center;
   align-items: center;
   padding: 0;
-  height: 280px;
+  height: 240px;
   border-radius: 8px;
   background: #fff;
   -webkit-box-shadow: 0 4px 8px 6px rgba(7,17,27,0.06);
@@ -2814,8 +2831,8 @@ blockquote footer cite:before {
 }
 #recent-posts > .recent-post-item .post_cover {
   overflow: hidden;
-  width: 45%;
-  height: 280px;
+  width: 25%;
+  height: 200px;
   -webkit-mask-image: -webkit-radial-gradient(#fff, #000);
 }
 #recent-posts > .recent-post-item .post_cover img.post_bg {
@@ -2843,7 +2860,7 @@ blockquote footer cite:before {
   display: inline-block;
   overflow: hidden;
   padding: 0 40px;
-  width: 55%;
+  width: 75%;
 }
 #recent-posts > .recent-post-item >.recent-post-info.no-cover {
   width: 100%;
@@ -4474,7 +4491,6 @@ figure.gallery-group .gallery-group-name:after {
   right: 0;
   bottom: 0;
   left: 0;
-  background-color: rgba(0,0,0,0.7);
   content: '';
 }
 [data-theme='dark'] #nav > #page-header a {
@@ -4598,6 +4614,10 @@ figure.gallery-group .gallery-group-name:after {
 [data-theme='dark'] #aside_content .social-icon,
 [data-theme='dark'] #aside_content .card-category-list-link-more,
 [data-theme='dark'] #aside_content .card-archive-list-link-more {
+  color: rgba(255,255,255,0.6) !important;
+}
+[data-theme='dark'] #aside_content .card-categories ul .card-post-name,
+[data-theme='dark'] #aside_content .card-categories ul .card-category-list-name {
   color: rgba(255,255,255,0.6) !important;
 }
 [data-theme='dark'] .button--animated:before {
