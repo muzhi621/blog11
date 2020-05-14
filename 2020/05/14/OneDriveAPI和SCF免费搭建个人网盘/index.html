@@ -1,0 +1,214 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width,initial-scale=1"><title>onedrive API和SCF免费搭建个人云盘2.0 | liwuy's blog</title><meta name="description" content="本搭建方法用腾讯云的无服务器云函数配合API网关实现, 不需要自己的服务器，0成本搭建, 实测运行机器的配置 8核16G内存(可以运行 system命令链接shell看), 因此此方法搭建自己的大型网站完全够用。 目前无服务器云函数 SCF 处于公测阶段，并未正式收费，所有用户均可以放心使用。   演示地址(非个人的个人网盘，公开的演示地址)SCF 简介腾讯云云函数（Serverless Clou"><meta name="keywords" content="教程,技术"><meta name="author" content="liwu"><meta name="copyright" content="liwu"><meta name="format-detection" content="telephone=no"><link rel="shortcut icon" href="/img/favicon.png"><meta http-equiv="Cache-Control" content="no-transform"><meta http-equiv="Cache-Control" content="no-siteapp"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="dns-prefetch" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="https://fonts.googleapis.com" crossorigin="crossorigin"/><link rel="dns-prefetch" href="https://fonts.googleapis.com"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><link rel="dns-prefetch" href="//busuanzi.ibruce.info"/><meta name="twitter:card" content="summary"><meta name="twitter:title" content="onedrive API和SCF免费搭建个人云盘2.0"><meta name="twitter:description" content="本搭建方法用腾讯云的无服务器云函数配合API网关实现, 不需要自己的服务器，0成本搭建, 实测运行机器的配置 8核16G内存(可以运行 system命令链接shell看), 因此此方法搭建自己的大型网站完全够用。 目前无服务器云函数 SCF 处于公测阶段，并未正式收费，所有用户均可以放心使用。   演示地址(非个人的个人网盘，公开的演示地址)SCF 简介腾讯云云函数（Serverless Clou"><meta name="twitter:image" content="http://yoursite.com/img/30.jpg"><meta property="og:type" content="article"><meta property="og:title" content="onedrive API和SCF免费搭建个人云盘2.0"><meta property="og:url" content="http://yoursite.com/2020/05/14/OneDriveAPI%E5%92%8CSCF%E5%85%8D%E8%B4%B9%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E7%BD%91%E7%9B%98/"><meta property="og:site_name" content="liwuy's blog"><meta property="og:description" content="本搭建方法用腾讯云的无服务器云函数配合API网关实现, 不需要自己的服务器，0成本搭建, 实测运行机器的配置 8核16G内存(可以运行 system命令链接shell看), 因此此方法搭建自己的大型网站完全够用。 目前无服务器云函数 SCF 处于公测阶段，并未正式收费，所有用户均可以放心使用。   演示地址(非个人的个人网盘，公开的演示地址)SCF 简介腾讯云云函数（Serverless Clou"><meta property="og:image" content="http://yoursite.com/img/30.jpg"><meta property="article:published_time" content="2020-05-14T04:24:18.000Z"><meta property="article:modified_time" content="2020-05-14T07:04:21.467Z"><script src="https://cdn.jsdelivr.net/npm/js-cookie/dist/js.cookie.min.js"></script><script>var autoChangeMode = '1'
+var t = Cookies.get("theme")
+if (autoChangeMode == '1'){
+  var isDarkMode = window.matchMedia("(prefers-color-scheme: dark)").matches
+  var isLightMode = window.matchMedia("(prefers-color-scheme: light)").matches
+  var isNotSpecified = window.matchMedia("(prefers-color-scheme: no-preference)").matches
+  var hasNoSupport = !isDarkMode && !isLightMode && !isNotSpecified
+
+  if (t === undefined){
+    if (isLightMode) activateLightMode()
+    else if (isDarkMode) activateDarkMode()
+    else if (isNotSpecified || hasNoSupport){
+      console.log('You specified no preference for a color scheme or your browser does not support it. I Schedule dark mode during night time.')
+      var now = new Date()
+      var hour = now.getHours()
+      var isNight = hour < 6 || hour >= 18
+      isNight ? activateDarkMode() : activateLightMode()
+  }
+  } else if (t == 'light') activateLightMode()
+  else activateDarkMode()
+
+} else if (autoChangeMode == '2'){
+  now = new Date();
+  hour = now.getHours();
+  isNight = hour < 6 || hour >= 18
+  if(t === undefined) isNight? activateDarkMode() : activateLightMode()
+  else if (t === 'light') activateLightMode()
+  else activateDarkMode() 
+} else {
+  if ( t == 'dark' ) activateDarkMode()
+  else if ( t == 'light') activateLightMode()
+}
+
+function activateDarkMode(){
+  document.documentElement.setAttribute('data-theme', 'dark')
+  if (document.querySelector('meta[name="theme-color"]') !== null){
+    document.querySelector('meta[name="theme-color"]').setAttribute('content','#000')
+  }
+}
+function activateLightMode(){
+  document.documentElement.setAttribute('data-theme', 'light')
+  if (document.querySelector('meta[name="theme-color"]') !== null){
+  document.querySelector('meta[name="theme-color"]').setAttribute('content','#fff')
+  }
+}</script><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/font-awesome@latest/css/font-awesome.min.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.css"><link rel="canonical" href="http://yoursite.com/2020/05/14/OneDriveAPI%E5%92%8CSCF%E5%85%8D%E8%B4%B9%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E7%BD%91%E7%9B%98/"><link rel="prev" title="Markdown语法" href="http://yoursite.com/2020/05/14/Markdown%E8%AF%AD%E6%B3%95/"><link rel="next" title="V2Ray一键安装脚本和管理脚本" href="http://yoursite.com/2020/05/14/V2Ray%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85%E8%84%9A%E6%9C%AC%E5%92%8C%E7%AE%A1%E7%90%86%E8%84%9A%E6%9C%AC/"><link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Titillium+Web"><script>var GLOBAL_CONFIG = { 
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: {"defaultEncoding":2,"translateDelay":0,"cookieDomain":"http://1008618.xyz/","msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  bookmark: {
+    message_prev: '按',
+    message_next: '键将本页加入书签'
+  },
+  runtime_unit: '天',
+  runtime: true,
+  copyright: undefined,
+  ClickShowText: undefined,
+  medium_zoom: false,
+  fancybox: true,
+  Snackbar: undefined,
+  baiduPush: false,
+  highlightCopy: true,
+  highlightLang: true,
+  highlightShrink: 'false',
+  isFontAwesomeV5: false,
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isanchor: false
+  
+}</script><link rel="stylesheet" href="/css/footer.min.css"><script src="/js/classify.js"></script><script>var GLOBAL_CONFIG_SITE = { 
+  isPost: true,
+  isHome: false,
+  isSidebar: true  
+  }</script><noscript><style>
+#page-header {
+  opacity: 1
+}
+.justified-gallery img{
+  opacity: 1
+}
+</style></noscript><meta name="generator" content="Hexo 4.2.0"></head><body><div id="mobile-sidebar"><div id="menu_mask"></div><div id="mobile-sidebar-menus"><div class="mobile_author_icon"><img class="avatar-img" src="/img/avatar.png" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="mobile_post_data"><div class="mobile_data_item is-center"><div class="mobile_data_link"><a href="/archives/"><div class="headline">文章</div><div class="length_num">38</div></a></div></div><div class="mobile_data_item is-center">      <div class="mobile_data_link"><a href="/tags/"><div class="headline">标签</div><div class="length_num">8</div></a></div></div><div class="mobile_data_item is-center">     <div class="mobile_data_link"><a href="/categories/"><div class="headline">分类</div><div class="length_num">7</div></a></div></div></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fa fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fa fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fa fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fa fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fa fa-heart"></i><span> 关于</span></a></div><div class="menus_item"><a class="site-page"><i class="fa-fw fa fa-list" aria-hidden="true"></i><span> 列表</span><i class="fa fa-chevron-down menus-expand" aria-hidden="true"></i></a><ul class="menus_item_child"><li><a class="site-page" href="/music/"><i class="fa-fw fa fa-music"></i><span> 音乐</span></a></li><li><a class="site-page" href="/movies/"><i class="fa-fw fa fa-film"></i><span> 电影</span></a></li><li><a class="site-page" href="/movies/"><i class="fa-fw fa fa-book"></i><span> 阅读</span></a></li></ul></div></div></div></div><i class="fa fa-arrow-right on" id="toggle-sidebar" aria-hidden="true">     </i><div id="sidebar"><div class="sidebar-toc"><div class="sidebar-toc__title">目录</div><div class="sidebar-toc__progress"><span class="progress-notice">你已经读了</span><span class="progress-num">0</span><span class="progress-percentage">%</span><div class="sidebar-toc__progress-bar">     </div></div><div class="sidebar-toc__content"><ol class="toc"><li class="toc-item toc-level-4"><a class="toc-link" href="#演示地址-非个人的个人网盘，公开的演示地址"><span class="toc-text">演示地址(非个人的个人网盘，公开的演示地址)</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SCF-简介"><span class="toc-text">SCF 简介</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#获取-Onedrive-账号"><span class="toc-text">获取 Onedrive 账号</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#创建函数服务"><span class="toc-text">创建函数服务</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#上传函数代码"><span class="toc-text">上传函数代码</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#添加触发方式"><span class="toc-text">添加触发方式</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#获取并填写-refresh-token"><span class="toc-text">获取并填写 refresh_token</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#配置环境变量"><span class="toc-text">配置环境变量</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#自定义域名（可选）"><span class="toc-text">自定义域名（可选）</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#http-转-https（可选）"><span class="toc-text">http 转 https（可选）</span></a></div></div></div><div id="body-wrap"><div id="web_bg" data-type="photo"></div><div class="post-bg" id="nav" style="background-image: url(/img/30.jpg)"><div id="page-header"><span class="pull_left" id="blog_name"><a class="blog_title" id="site-name" href="/">liwuy's blog</a></span><span class="pull_right menus"><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fa fa-home"></i><span> 首页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fa fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/tags/"><i class="fa-fw fa fa-tags"></i><span> 标签</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fa fa-folder-open"></i><span> 分类</span></a></div><div class="menus_item"><a class="site-page" href="/link/"><i class="fa-fw fa fa-link"></i><span> 友链</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fa fa-heart"></i><span> 关于</span></a></div><div class="menus_item"><a class="site-page"><i class="fa-fw fa fa-list" aria-hidden="true"></i><span> 列表</span><i class="fa fa-chevron-down menus-expand" aria-hidden="true"></i></a><ul class="menus_item_child"><li><a class="site-page" href="/music/"><i class="fa-fw fa fa-music"></i><span> 音乐</span></a></li><li><a class="site-page" href="/movies/"><i class="fa-fw fa fa-film"></i><span> 电影</span></a></li><li><a class="site-page" href="/movies/"><i class="fa-fw fa fa-book"></i><span> 阅读</span></a></li></ul></div></div><span class="toggle-menu close"><a class="site-page"><i class="fa fa-bars fa-fw" aria-hidden="true"></i></a></span></span></div><div id="post-info"><div id="post-title"><div class="posttitle">onedrive API和SCF免费搭建个人云盘2.0</div></div><div id="post-meta"><div class="meta-firstline"><time class="post-meta__date"><span class="post-meta__date-created" title="发表于 2020-05-14 12:24:18"><i class="fa fa-calendar" aria-hidden="true"></i> 发表于 2020-05-14</span><span class="post-meta__separator">|</span><span class="post-meta__date-updated" title="更新于 2020-05-14 15:04:21"><i class="fa fa-history" aria-hidden="true"></i> 更新于 2020-05-14</span></time><span class="post-meta__categories"><span class="post-meta__separator">|</span><i class="fa fa-inbox post-meta__icon" aria-hidden="true"></i><a class="post-meta__categories" href="/categories/%E6%95%99%E7%A8%8B/">教程</a></span></div><div class="meta-secondline"> <span class="post-meta-wordcount"><i class="post-meta__icon fa fa-file-word-o" aria-hidden="true"></i><span>字数总计:</span><span class="word-count">2.2k</span><span class="post-meta__separator">|</span><i class="post-meta__icon fa fa-clock-o" aria-hidden="true"></i><span>阅读时长: 7 分钟</span></span></div><div class="meta-thirdline"><span class="post-meta-pv-cv"><span class="post-meta__separator">|</span><i class="fa fa-eye post-meta__icon" aria-hidden="true"> </i><span>阅读量:</span><span id="busuanzi_value_page_pv"></span></span><span class="post-meta-commentcount"></span></div></div></div></div><main class="layout_post" id="content-inner"><article id="post"><div class="post-content" id="article-container"><p>本搭建方法用腾讯云的无服务器云函数配合API网关实现, 不需要自己的服务器，0成本搭建, 实测运行机器的配置 8核16G内存(可以运行 system命令链接shell看), 因此此方法搭建自己的大型网站完全够用。</p>
+<p>目前无服务器云函数 SCF 处于公测阶段，并未正式收费，所有用户均可以放心使用。</p>
+<a id="more"></a>
+
+<h4 id="演示地址-非个人的个人网盘，公开的演示地址"><a href="#演示地址-非个人的个人网盘，公开的演示地址" class="headerlink" title="演示地址(非个人的个人网盘，公开的演示地址)"></a><a href="https://service-pgxgvop2-1258064400.ap-hongkong.apigateway.myqcloud.com/test/abcdef/" target="_blank" rel="noopener">演示地址(非个人的个人网盘，公开的演示地址)</a></h4><h2 id="SCF-简介"><a href="#SCF-简介" class="headerlink" title="SCF 简介"></a>SCF 简介</h2><p>腾讯云云函数（Serverless Cloud Function，SCF）是腾讯云为企业和开发者们提供的无服务器执行环境，帮助您在无需购买和管理服务器的情况下运行代码，是实时文件处理和数据处理等场景下理想的计算平台。您只需使用 SCF 平台支持的语言编写核心代码并设置代码运行的条件，即可在腾讯云基础设施上弹性、安全地运行代码。</p>
+<p>无服务器（Serverless）不是表示没有服务器，而表示当您在使用 Serverless 时，您无需关心底层资源，也无需登录服务器和优化服务器，只需关注最核心的代码片段，即可跳过复杂的、繁琐的基本工作。核心的代码片段完全由事件或者请求触发，平台根据请求自动平行调整服务资源。Serverless 拥有近乎无限的扩容能力，空闲时，不运行任何资源。代码运行无状态，可以轻易实现快速迭代、极速部署。</p>
+<p>腾讯云 SCF 目前仍在 <a href="https://cloud.tencent.com/document/product/583/17299" target="_blank" rel="noopener">公测</a> 阶段，所有用户可免费使用，结束日期待定。公测结束后，每月仍可享受足量的 <a href="https://cloud.tencent.com/document/product/583/12282" target="_blank" rel="noopener">免费资源使用量和免费调用次数</a>，但收取 <code>外网出流量</code> 费用。</p>
+<table>
+<thead>
+<tr>
+<th>资源类型</th>
+<th>每月免费额度</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>资源使用量</td>
+<td>40 万 GBs</td>
+</tr>
+<tr>
+<td>调用次数</td>
+<td>100 万次</td>
+</tr>
+</tbody></table>
+<p>所谓外网出流量，即程序通过 SCF 访问外部网络的流量，对于本程序即请求微软 API 的流量，每次调用从几 B 到几 KB 不等；文件上传下载直接与微软交互，不经过 SCF。</p>
+<p>下图（老图可能与描述不符）是我一天的使用量，大概调用了 10000 次，如果是 30 天就是 30 万次，还不到免费额度的 1/3。资源使用量 1000 GBs，30 天就是 3 万 GBs，远低于 40 万 GBs。外网出流量 0.05G ，一个月大概是 1.5 G，按照 <a href="https://cloud.tencent.com/document/product/583/12281" target="_blank" rel="noopener">正式收费标准</a> 0.8 元 / G，每月要支付 1.2 元的出流量费用，完全可以接受（目前不会收取）。</p>
+<p><img src="https://img13.360buyimg.com/img/jfs/t1/80717/30/8984/127477/5d6be0f4E2d3ddd41/affd65fa8e220bf2.png" alt="@YL51PJT6NML6PZW{TAI.png"></p>
+<h2 id="获取-Onedrive-账号"><a href="#获取-Onedrive-账号" class="headerlink" title="获取 Onedrive 账号"></a>获取 Onedrive 账号</h2><p>既然是利用 Onedrive，首先要获取一个账号，支持个人、企业和教育版。打个广告，我的 <a href="https://logi.ml/store.html" target="_blank" rel="noopener">杂货铺</a> 里有含 5T 空间的 Onedrive 教育账号，限时优惠 1 元 / 个，购买后可直接使用。</p>
+<h2 id="创建函数服务"><a href="#创建函数服务" class="headerlink" title="创建函数服务"></a>创建函数服务</h2><p>有了账号后就可以创建函数了。登录 <a href="https://console.cloud.tencent.com/scf/list" target="_blank" rel="noopener">腾讯云 SCF 控制台</a>（在此之前要完成腾讯云 <a href="https://cloud.tencent.com/document/product/378/10495" target="_blank" rel="noopener">实名认证</a>），点击左侧菜单栏的 <code>函数服务</code>，接着点击顶栏的地区选择下拉框，选择 <code>香港</code>，因为大陆区域在绑定域名时需要备案，如果你拥有已备案的域名，则可以选择国内，当然不绑定域名也可以使用。接着点击蓝色的 <code>新建</code> 按钮，创建函数。</p>
+<p><img src="https://img12.360buyimg.com/img/jfs/t1/78335/19/8782/41051/5d6b779bEd3525463/c193a7a039e82f6e.png" alt="create_a_function"></p>
+<p>随后在新建函数页面填写 <code>函数名称</code>，名字随意；<code>运行环境</code> 选择 <code>Php 7.2</code>；<code>创建方式</code> 选择 <code>模板函数</code>；选择 <code>helloworld</code> 模板，最后点击最下方的 <code>下一步</code>。进入 <code>② 函数配置</code> 页面后不做任何修改，直接点击 <code>完成</code>。</p>
+<p><img src="https://img11.360buyimg.com/img/jfs/t1/67123/11/8810/58169/5d6b7c32E1b6db7b4/aac10c9eab43d942.png" alt="GX&lt;code&gt;VWO~RYU4QSIHM&lt;/code&gt;EE_{PG.png"></p>
+<h2 id="上传函数代码"><a href="#上传函数代码" class="headerlink" title="上传函数代码"></a>上传函数代码</h2><p>下载并解压 <code>Tai7sy</code> 大佬的项目 <a href="https://github.com/Tai7sy/OneDrive_SCF/archive/master.zip" target="_blank" rel="noopener">OneDrive_SCF</a>。随后，进入 SCF <code>函数代码</code> 面板，将 <code>提交方法下拉框</code> 的值改为 <code>本地上传文件夹</code>，随后点击 <code>上传</code>，选择 <code>解压好的文件夹</code>，最后点击 <code>保存</code>。注意，解压后查看一下是否包含两层文件夹，如果是，上传内层。</p>
+<p>![D5OFS6O`X7}$VW)B3$UTQA.png](<a href="https://img11.360buyimg.com/img/jfs/t1/62901/35/8995/35468/5d6b7f28Eeff3c58a/1d30dd4b9ce9d475.png" target="_blank" rel="noopener">https://img11.360buyimg.com/img/jfs/t1/62901/35/8995/35468/5d6b7f28Eeff3c58a/1d30dd4b9ce9d475.png</a>)</p>
+<h2 id="添加触发方式"><a href="#添加触发方式" class="headerlink" title="添加触发方式"></a>添加触发方式</h2><p>进入函数服务的 <code>触发方式</code> 面板，点击 <code>添加触发方式</code>。选择触发方式下拉框中的 <code>API网关触发器</code>，勾选下方的 <code>启用集成响应</code>，点击 <code>保存</code>。</p>
+<p><img src="https://img14.360buyimg.com/img/jfs/t1/83154/3/8875/52837/5d6b92e5E4b004249/7cbe89ce911aff9f.png" alt="SC6P6_()$O$FK7_IB_S3(}4.png"></p>
+<p>稍等片刻，下方会出现一个 <code>访问路径</code>，点击打开它。</p>
+<p>![2UV{Q5H@V13S956@IWG7`2.png](<a href="https://img10.360buyimg.com/img/jfs/t1/40554/26/13645/35452/5d6b9534E00ac9179/b2977f4e630803b3.png" target="_blank" rel="noopener">https://img10.360buyimg.com/img/jfs/t1/40554/26/13645/35452/5d6b9534E00ac9179/b2977f4e630803b3.png</a>)</p>
+<h2 id="获取并填写-refresh-token"><a href="#获取并填写-refresh-token" class="headerlink" title="获取并填写 refresh_token"></a>获取并填写 refresh_token</h2><p>打开 <code>函数 API 网关访问路径</code> 后，点击其中的 <code>Get a refresh_token</code>，在打开的微软账号登录页面中，填写你的 <code>Onedrive 账号和密码</code>，完成登录。</p>
+<p>![5}R<code>T]W</code>_6)TC%RBYPYG8UV.png](<a href="https://img10.360buyimg.com/img/jfs/t1/49067/32/9406/43409/5d6b9617Eeacb072b/2c65ab509bb73465.png" target="_blank" rel="noopener">https://img10.360buyimg.com/img/jfs/t1/49067/32/9406/43409/5d6b9617Eeacb072b/2c65ab509bb73465.png</a>)</p>
+<p>登录完毕后会跳转到 <code>localhost</code>，并提示无法访问此网站。</p>
+<p>![S(ATUX0T4`F7C75G%QZWW)Q.png](<a href="https://img11.360buyimg.com/img/jfs/t1/63534/36/8984/34721/5d6b9676E899aec0c/7de00cd53127392c.png" target="_blank" rel="noopener">https://img11.360buyimg.com/img/jfs/t1/63534/36/8984/34721/5d6b9676E899aec0c/7de00cd53127392c.png</a>)</p>
+<p>将网址栏的 <code>localhost</code> 替换为 <code>函数 API 网关访问路径</code> 后回车。</p>
+<p>![CZ46{HC2Q%M4XO(%`07ZXV.png](<a href="https://img12.360buyimg.com/img/jfs/t1/49064/14/9365/31059/5d6b96b4Ebba6ffe5/76476c01df07a6f1.png" target="_blank" rel="noopener">https://img12.360buyimg.com/img/jfs/t1/49064/14/9365/31059/5d6b96b4Ebba6ffe5/76476c01df07a6f1.png</a>)</p>
+<p>稍等片刻便会返回 <code>refresh_token</code>，复制它备用。</p>
+<p><img src="https://img14.360buyimg.com/img/jfs/t1/56678/37/9552/59863/5d6b977cE8dd2360f/220f0d790f980277.png" alt="C6QSEL5POOL75U"></p>
+<p>进入 SCF <code>函数代码</code> 面板，选中 <code>index.php</code>，将得到的 <code>refresh_token</code> 粘贴进，下图所示的单引号之间，最后点击靠近左下方的 <code>保存</code>。</p>
+<p><img src="https://img10.360buyimg.com/img/jfs/t1/74544/37/8955/122226/5d6b8a38Ea6142e2b/7e313a3752a4fb9b.png" alt="UUU{L_%MUDV1I}YSTPXZ2.png"></p>
+<h2 id="配置环境变量"><a href="#配置环境变量" class="headerlink" title="配置环境变量"></a>配置环境变量</h2><p>进入 <code>函数配置</code> 面板，点击靠近右上角的 <code>编辑</code> 按钮。</p>
+<p><img src="https://img10.360buyimg.com/img/jfs/t1/55934/31/9306/24352/5d6b82a6E03751d6d/22346a7906fb4afb.png" alt="_SP7_T$@DA}LQRVA3SG}44G.png"></p>
+<p>在新面板中，将 <code>内存</code> 修改为 <code>最大值</code>，当然 64M 也是可以运行的，需要说明的是，内存越大可用的免费时长越少，不过一般是够用的；<code>超时时间</code> 填写 <code>30</code>，随后添加 5 个环境变量，它们的功能如下：</p>
+<table>
+<thead>
+<tr>
+<th>key</th>
+<th>value</th>
+<th>intro</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>sitename</td>
+<td>站点名称</td>
+<td>无</td>
+</tr>
+<tr>
+<td>public_path</td>
+<td>公开展示的 Onedrive 根路径</td>
+<td>未绑定自定义域名时使用</td>
+</tr>
+<tr>
+<td>private_path</td>
+<td>公开展示的 Onedrive 根路径</td>
+<td>绑定了自定义域名时使用</td>
+</tr>
+<tr>
+<td>passfile</td>
+<td>密码文件名称</td>
+<td>在某目录下添加该文件，里面写入密码即可加密文件夹，可以是’.password’，也可以是’aaaa.txt’等等；</td>
+</tr>
+<tr>
+<td>admin</td>
+<td>管理员密码</td>
+<td>管理员登录后功能更多</td>
+</tr>
+<tr>
+<td>adminloginpage</td>
+<td>管理员登陆路径</td>
+<td>如果设置，管理登录的页面不再是’?admin’，而是此设置的值，登录按钮及页面隐藏；</td>
+</tr>
+<tr>
+<td>imgup_path</td>
+<td>公开图床</td>
+<td>设置图床路径，不设置这个值时该目录内容会正常列文件出来，设置后只有上传界面，不显示其中文件（登录后显示）</td>
+</tr>
+</tbody></table>
+<p><img src="https://img13.360buyimg.com/img/jfs/t1/82068/38/8844/46527/5d6b82a8E2b44d81d/3424a3797211a478.png" alt=""></p>
+<p>所有信息填写完毕后点击保存，刷新 <code>函数 API 网关访问路径</code>，即可访问你的 Onedrive 网盘。</p>
+<p>![<em>Z</em>QK7_3G}T}IGT4WZ`{)E.png](<a href="https://img10.360buyimg.com/img/jfs/t1/49705/38/9495/37688/5d6b9886Ec0e6f171/119cbeef724cd5c7.png" target="_blank" rel="noopener">https://img10.360buyimg.com/img/jfs/t1/49705/38/9495/37688/5d6b9886Ec0e6f171/119cbeef724cd5c7.png</a>)</p>
+<h2 id="自定义域名（可选）"><a href="#自定义域名（可选）" class="headerlink" title="自定义域名（可选）"></a>自定义域名（可选）</h2><p>进入函数服务的 <code>触发方式</code> 面板，点击打开 <code>SCF_API_SERVICE</code>。</p>
+<p><img src="https://img14.360buyimg.com/img/jfs/t1/58938/40/9235/37925/5d6b9a15E2a329579/a6ff29214e8578c4.png" alt="_H1UQ7TU$31)R54B97VK$S.png"></p>
+<p>打开服务界面的 <code>自定义域名</code> 面板，点击 <code>新建</code>。</p>
+<p><img src="https://img14.360buyimg.com/img/jfs/t1/75575/7/8907/25412/5d6b9a89E17359d86/9386a93623c95d9b.png" alt="47Q4Z)PLOV{AC@AFFIS5.png"></p>
+<p>在添加域名对话框中，填写你的 <code>域名</code>，<code>协议</code> 选择 <code>http</code>，如果你想使用 <code>https</code>，则必须在腾讯云 <a href="https://cloud.tencent.com/document/product/400/6814" target="_blank" rel="noopener">申请或上传 SSL 证书</a>，如果你已经在其他平台申请过推荐直接上传，因为申请一般要等待数小时才能完成。未进行上述操作你看到的 <code>证书下拉框</code> 里将会是<code>无</code>。网络类型勾选 <code>外网</code>。选择 <code>自定义路径映射</code>，添加一条记录，路径为 <code>/</code>，指向 <code>发布</code> 环境。</p>
+<p><img src="https://img12.360buyimg.com/img/jfs/t1/82337/2/9023/40411/5d6de694E29a550dc/a06d1420f6bdf47e.png" alt="I%G@QBED$T6OJ.png"></p>
+<p>打开你的域名解析服务商控制台，在域名解析列表里添加一条 <a href="https://cloud.tencent.com/document/product/302/3450" target="_blank" rel="noopener">CNAME 记录</a>，值便是图中上方的 <code>外网二级域名</code>。最后点击 <code>提交</code>。</p>
+<p>进入 <code>管理 API</code> 面板，点击 <code>编辑</code>。</p>
+<p><img src="https://img12.360buyimg.com/img/jfs/t1/75724/35/9137/30365/5d6de5bbEbebf6709/ecf9149ecd869df3.png" alt="7K.png"></p>
+<p>在 <code>前端配置</code> 面板中，将路径改为 <code>/</code>，点击下一步。</p>
+<p><img src="https://img11.360buyimg.com/img/jfs/t1/81276/18/9151/53670/5d6de5bdE22b67bd0/f9323a6cca49f732.png" alt="MU0D8F.png"></p>
+<p>在 <code>后端配置</code> 中，保证已勾选 <code>启用集成响应</code> 后点击 <code>下一步</code>。</p>
+<p><img src="https://img11.360buyimg.com/img/jfs/t1/77289/11/9087/26551/5d6de5c2Eaf31705b/5950b12c8261ecd7.png" alt="TZDO.png"></p>
+<p>在 <code>响应结果</code> 面板，将 <code>返回类型</code> 改为 <code>HTML</code>，点击 <code>完成</code>。</p>
+<p><img src="https://img12.360buyimg.com/img/jfs/t1/49932/13/9445/26534/5d6de5c4Eaa7582f4/7efa4f81442852c7.png" alt="afaPU.png"></p>
+<p>在弹出的对话框中，点击 <code>前往发布服务</code>。</p>
+<p><img src="https://img14.360buyimg.com/img/jfs/t1/77585/36/9012/22830/5d6de5c6Ea2ee3023/70320d81116e8c26.png" alt="fafadfEGM.png"></p>
+<p>在 <code>服务信息</code> 面板，点击靠近 <code>右上角</code> 的 <code>发布</code> 按钮。</p>
+<p><img src="https://img12.360buyimg.com/img/jfs/t1/72692/38/9030/27078/5d6de5c8E56e8d3f7/37da68d26c44f8d1.png" alt="fafadUHOH8MI5.png"></p>
+<p>在弹出的 <code>发布服务</code> 对话框中，将 <code>发布环境</code> 改为 <code>发布</code>，<code>备注</code> 随意填写，最后点击 <code>提交</code>。</p>
+<p><img src="https://img12.360buyimg.com/img/jfs/t1/49295/10/9605/23935/5d6de5caE43782e1b/f1b36f0d54f8277b.png" alt="8WBC7C0UQfadf.png"></p>
+<p>现在就可以通过自定义域名访问你的网盘了。</p>
+<h2 id="http-转-https（可选）"><a href="#http-转-https（可选）" class="headerlink" title="http 转 https（可选）"></a>http 转 https（可选）</h2><p>如果你使用了 <code>https</code>，可以通过在 html 头部添加 <code>js</code> 的方式实现 <code>http</code> 跳转 <code>https</code>。</p>
+<p>复制以下 js 代码，粘贴到 <code>函数代码</code> 面板里的 <code>index.php</code> 文件的 <code>609</code> 行左右，点击靠近左下方的 <code>保存</code>。</p>
+<p>copy</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="actionscript">  <span class="keyword">if</span> (location.protocol === <span class="string">"http:"</span>) &#123;</span></span><br><span class="line"><span class="javascript">    location.href = location.href.replace(<span class="regexp">/http/</span>, <span class="string">"https"</span>);</span></span><br><span class="line">  &#125;</span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p><img src="https://img10.360buyimg.com/img/jfs/t1/66824/34/8756/139117/5d6b9f2eEfa878ba6/a0e1e63db8562fb5.png" alt="}N2UR&lt;code&gt;L5P1$(A{H6VXNN&lt;/code&gt;1P.png"></p>
+<p>现在使用 <code>http</code> 协议访问，查看是否自动跳转 <code>https</code>。</p>
+<p>感谢：<a href="https://github.com/qkqpttgf/OneDrive_SCF" target="_blank" rel="noopener">https://github.com/qkqpttgf/OneDrive_SCF</a></p>
+<p><strong>经参考<a href="https://logi.ml/back-end/scf-onedrive-filelistor.html" target="_blank" rel="noopener">LOGI</a>并结合个人1.0个人修改后形成</strong></p>
+</div><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="mailto:undefined">liwu</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="http://yoursite.com/2020/05/14/OneDriveAPI%E5%92%8CSCF%E5%85%8D%E8%B4%B9%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E7%BD%91%E7%9B%98/">http://yoursite.com/2020/05/14/OneDriveAPI%E5%92%8CSCF%E5%85%8D%E8%B4%B9%E6%90%AD%E5%BB%BA%E4%B8%AA%E4%BA%BA%E7%BD%91%E7%9B%98/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="http://yoursite.com" target="_blank">liwuy's blog</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E6%95%99%E7%A8%8B/">教程</a><a class="post-meta__tags" href="/tags/%E6%8A%80%E6%9C%AF/">技术</a></div><div class="post_share"><div class="social-share" data-image="/img/1.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/social-share.js/dist/css/share.min.css"/><script src="https://cdn.jsdelivr.net/npm/social-share.js/dist/js/social-share.min.js"></script></div></div><div class="post-reward"><a class="reward-button button--primary button--animated"> <i class="fa fa-qrcode"></i> 打赏<div class="reward-main"><ul class="reward-all"><li class="reward-item"><img class="post-qr-code__img" src="/img/wechat.jpg" alt="微信"/><div class="post-qr-code__desc">微信</div></li><li class="reward-item"><img class="post-qr-code__img" src="/img/alipay.jpg" alt="支付寶"/><div class="post-qr-code__desc">支付寶</div></li></ul></div></a></div><nav class="pagination_post" id="pagination"><div class="prev-post pull_left"><a href="/2020/05/14/Markdown%E8%AF%AD%E6%B3%95/"><img class="prev_cover" src="/img/28.jpg" onerror="onerror=null;src='/img/404.jpg'"><div class="pagination-info"><div class="label">上一篇</div><div class="prev_info">Markdown语法</div></div></a></div><div class="next-post pull_right"><a href="/2020/05/14/V2Ray%E4%B8%80%E9%94%AE%E5%AE%89%E8%A3%85%E8%84%9A%E6%9C%AC%E5%92%8C%E7%AE%A1%E7%90%86%E8%84%9A%E6%9C%AC/"><img class="next_cover" src="/img/32.jpg" onerror="onerror=null;src='/img/404.jpg'"><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">V2Ray一键安装脚本和管理脚本</div></div></a></div></nav><div class="relatedPosts"><div class="relatedPosts_headline"><i class="fa fa-fw fa-thumbs-up" aria-hidden="true"></i><span> 相关推荐</span></div><div class="relatedPosts_list"><div class="relatedPosts_item"><a href="/2020/05/14/onedrive搭建个人云盘/" title="onedrive搭建个人云盘"><img class="relatedPosts_cover" src="/img/29.jpg"><div class="relatedPosts_main is-center"><div class="relatedPosts_date"><i class="fa fa-calendar fa-fw" aria-hidden="true"></i> 2020-05-14</div><div class="relatedPosts_title">onedrive搭建个人云盘</div></div></a></div><div class="relatedPosts_item"><a href="/2020/05/14/腾讯云SCF无服务器函数搭建OneDrive/" title="腾讯SCF无服务器函数搭建onedrive"><img class="relatedPosts_cover" src="/img/13.jpg"><div class="relatedPosts_main is-center"><div class="relatedPosts_date"><i class="fa fa-calendar fa-fw" aria-hidden="true"></i> 2020-05-14</div><div class="relatedPosts_title">腾讯SCF无服务器函数搭建onedrive</div></div></a></div><div class="relatedPosts_item"><a href="/2020/05/14/CentOS7一键安装Caddy+Aria2+AriaNg实现离线下载/" title="CentOS7一键安装Caddy+Aria2+AriaNg实现离线下载"><img class="relatedPosts_cover" src="/img/23.jpg"><div class="relatedPosts_main is-center"><div class="relatedPosts_date"><i class="fa fa-calendar fa-fw" aria-hidden="true"></i> 2020-05-14</div><div class="relatedPosts_title">CentOS7一键安装Caddy+Aria2+AriaNg实现离线下载</div></div></a></div><div class="relatedPosts_item"><a href="/2020/05/14/GitHub-coding-hexo博客搭建/" title="GitHub&coding+hexo博客搭建"><img class="relatedPosts_cover" src="/img/26.jpg"><div class="relatedPosts_main is-center"><div class="relatedPosts_date"><i class="fa fa-calendar fa-fw" aria-hidden="true"></i> 2020-05-14</div><div class="relatedPosts_title">GitHub&coding+hexo博客搭建</div></div></a></div><div class="relatedPosts_item"><a href="/2020/05/14/Git基本操作及版本控制/" title="Git基本操作及版本控制"><img class="relatedPosts_cover" src="/img/25.jpg"><div class="relatedPosts_main is-center"><div class="relatedPosts_date"><i class="fa fa-calendar fa-fw" aria-hidden="true"></i> 2020-05-14</div><div class="relatedPosts_title">Git基本操作及版本控制</div></div></a></div><div class="relatedPosts_item"><a href="/2020/05/14/Git本地服务器搭建及使用/" title="Git本地服务器搭建及使用"><img class="relatedPosts_cover" src="/img/24.jpg"><div class="relatedPosts_main is-center"><div class="relatedPosts_date"><i class="fa fa-calendar fa-fw" aria-hidden="true"></i> 2020-05-14</div><div class="relatedPosts_title">Git本地服务器搭建及使用</div></div></a></div></div><div class="clear_both"></div></div></article></main><footer id="footer" data-type="color"><div id="footer-wrap"><div class="copyright">&copy;2020 By liwu</div><div class="framework-info"><span>驱动 </span><a href="https://hexo.io" target="_blank" rel="noopener"><span>Hexo</span></a><span class="footer-separator">|</span><span>主题 </span><a href="https://github.com/jerryc127/hexo-theme-butterfly" target="_blank" rel="noopener"><span>Butterfly</span></a></div></div></footer><script>var bg_index = Math.floor(Math.random() * 15);var res = 'background-image: url("https://cdn.jsdelivr.net/gh/muzhi621/muzhi-blog/source/img/' + bg_index + '.jpg"); background-attachment: fixed;';document.getElementById('web_bg').style = res</script></div><section class="rightside" id="rightside"><div id="rightside-config-hide"><i class="fa fa-book" id="readmode" title="阅读模式"></i><i class="fa fa-plus" id="font_plus" title="放大字体"></i><i class="fa fa-minus" id="font_minus" title="缩小字体"></i><a class="translate_chn_to_cht" id="translateLink" href="javascript:translatePage();" title="简繁转换" target="_self">繁</a><i class="darkmode fa fa-moon-o" id="darkmode" title="夜间模式"></i></div><div id="rightside-config-show"><div id="rightside_config" title="设置"><i class="fa fa-cog" aria-hidden="true"></i></div><i class="fa fa-list-ul close" id="mobile-toc-button" title="目录" aria-hidden="true"></i><i class="fa fa-arrow-up" id="go-up" title="回到顶部" aria-hidden="true"></i></div></section><script src="https://cdn.jsdelivr.net/npm/jquery@latest/dist/jquery.min.js"></script><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/fancybox@latest/dist/jquery.fancybox.min.js"></script><script async src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page@latest/instantpage.min.js" type="module"></script></body></html>
