@@ -2999,7 +2999,7 @@ _:future,
   -webkit-align-items: center;
   align-items: center;
   padding: 0;
-  height: 280px;
+  height: 260px;
   border-radius: 8px;
   background: var(--card-bg);
   -webkit-box-shadow: 0 4px 8px 6px rgba(7,17,27,0.06);
@@ -3035,8 +3035,8 @@ _:future,
 }
 #recent-posts > .recent-post-item .post_cover {
   overflow: hidden;
-  width: 45%;
-  height: 280px;
+  width: 30%;
+  height: 250px;
   -webkit-mask-image: -webkit-radial-gradient(#fff, #000);
 }
 #recent-posts > .recent-post-item .post_cover img.post_bg {
@@ -3064,7 +3064,7 @@ _:future,
   display: inline-block;
   overflow: hidden;
   padding: 0 40px;
-  width: 55%;
+  width: 70%;
 }
 #recent-posts > .recent-post-item >.recent-post-info.no-cover {
   width: 100%;
